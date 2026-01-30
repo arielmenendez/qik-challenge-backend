@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { Transaction, TransactionType } from './entities/transaction.entity';
 import { Account } from '../accounts/entities/account.entity';
 
@@ -73,5 +73,39 @@ export class TransactionsService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findTransactionsForAccount(options: {
+    accountId: string;
+    type?: TransactionType;
+    from?: Date;
+    to?: Date;
+    limit?: number;
+    offset?: number;
+  }) {
+    const { accountId, type, from, to, limit = 20, offset = 0 } = options;
+
+    const qb: SelectQueryBuilder<Transaction> =
+      this.transactionsRepository.createQueryBuilder('t');
+
+    qb.where('t.account_id = :accountId', { accountId });
+
+    if (type) {
+      qb.andWhere('t.type = :type', { type });
+    }
+
+    if (from) {
+      qb.andWhere('t.createdAt >= :from', { from });
+    }
+
+    if (to) {
+      qb.andWhere('t.createdAt <= :to', { to });
+    }
+
+    qb.orderBy('t.createdAt', 'DESC').skip(offset).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+
+    return { data, total };
   }
 }

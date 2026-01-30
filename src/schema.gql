@@ -24,6 +24,12 @@ type Query {
   accountBalance(id: ID!): Float!
   accountsStatus: String!
   myAccounts: [AccountType!]!
+  transactions(accountId: ID!, from: DateTime, limit: Int, offset: Int, to: DateTime, type: TransactionType): TransactionsPage!
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
 }
 
 type TransactionTypeGQL {
@@ -32,4 +38,9 @@ type TransactionTypeGQL {
   description: String
   id: ID!
   type: String!
+}
+
+type TransactionsPage {
+  data: [TransactionTypeGQL!]!
+  total: Int!
 }

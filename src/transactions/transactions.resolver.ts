@@ -6,6 +6,10 @@ import {
   Float,
   ObjectType,
   Field,
+  registerEnumType,
+  Int,
+  Query,
+  GraphQLISODateTime,
 } from '@nestjs/graphql';
 import { UseGuards } from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
@@ -29,9 +33,22 @@ class TransactionTypeGQL {
   @Field({ nullable: true })
   description?: string;
 
-  @Field()
+  @Field(() => GraphQLISODateTime)
   createdAt: Date;
 }
+
+@ObjectType()
+class TransactionsPage {
+  @Field(() => [TransactionTypeGQL])
+  data: TransactionTypeGQL[];
+
+  @Field(() => Int)
+  total: number;
+}
+
+registerEnumType(TransactionType, {
+  name: 'TransactionType',
+});
 
 @Resolver()
 export class TransactionsResolver {
@@ -74,5 +91,31 @@ export class TransactionsResolver {
       amount,
       description,
     );
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => TransactionsPage)
+  async transactions(
+    @Args('accountId', { type: () => ID }) accountId: string,
+    @CurrentUser() user: JwtUser,
+    @Args('type', { type: () => TransactionType, nullable: true })
+    type?: TransactionType,
+    @Args('from', { type: () => GraphQLISODateTime, nullable: true })
+    from?: Date,
+    @Args('to', { type: () => GraphQLISODateTime, nullable: true })
+    to?: Date,
+    @Args('limit', { type: () => Int, nullable: true }) limit?: number,
+    @Args('offset', { type: () => Int, nullable: true }) offset?: number,
+  ) {
+    await this.accountsService.findAccountByIdForUser(accountId, user.userId);
+
+    return this.transactionsService.findTransactionsForAccount({
+      accountId,
+      type,
+      from,
+      to,
+      limit,
+      offset,
+    });
   }
 }
