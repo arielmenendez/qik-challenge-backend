@@ -46,6 +46,36 @@ class TransactionsPage {
   total: number;
 }
 
+@ObjectType()
+class AccountSummary {
+  @Field(() => Float)
+  balance: number;
+
+  @Field(() => Float)
+  totalCredits: number;
+
+  @Field(() => Float)
+  totalDebits: number;
+}
+
+@ObjectType()
+class BalanceHistoryPoint {
+  @Field(() => ID)
+  transactionId: string;
+
+  @Field(() => String)
+  type: string;
+
+  @Field(() => Float)
+  amount: number;
+
+  @Field(() => Float)
+  balance: number;
+
+  @Field(() => GraphQLISODateTime)
+  date: Date;
+}
+
 registerEnumType(TransactionType, {
   name: 'TransactionType',
 });
@@ -117,5 +147,27 @@ export class TransactionsResolver {
       limit,
       offset,
     });
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => AccountSummary)
+  async accountSummary(
+    @Args('accountId', { type: () => ID }) accountId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    await this.accountsService.findAccountByIdForUser(accountId, user.userId);
+
+    return this.transactionsService.getAccountSummary(accountId);
+  }
+
+  @UseGuards(GqlAuthGuard)
+  @Query(() => [BalanceHistoryPoint])
+  async balanceHistory(
+    @Args('accountId', { type: () => ID }) accountId: string,
+    @CurrentUser() user: JwtUser,
+  ) {
+    await this.accountsService.findAccountByIdForUser(accountId, user.userId);
+
+    return this.transactionsService.getBalanceHistory(accountId);
   }
 }

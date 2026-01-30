@@ -108,4 +108,55 @@ export class TransactionsService {
 
     return { data, total };
   }
+
+  async getAccountSummary(accountId: string) {
+    const creditsResult = await this.transactionsRepository
+      .createQueryBuilder('t')
+      .select('COALESCE(SUM(t.amount), 0)', 'total')
+      .where('t.account_id = :accountId', { accountId })
+      .andWhere('t.type = :type', { type: TransactionType.CREDIT })
+      .getRawOne();
+
+    const debitsResult = await this.transactionsRepository
+      .createQueryBuilder('t')
+      .select('COALESCE(SUM(t.amount), 0)', 'total')
+      .where('t.account_id = :accountId', { accountId })
+      .andWhere('t.type = :type', { type: TransactionType.DEBIT })
+      .getRawOne();
+
+    const account = await this.accountsRepository.findOneByOrFail({
+      id: accountId,
+    });
+
+    return {
+      balance: Number(account.balance),
+      totalCredits: Number(creditsResult.total),
+      totalDebits: Number(debitsResult.total),
+    };
+  }
+
+  async getBalanceHistory(accountId: string) {
+    const transactions = await this.transactionsRepository.find({
+      where: { account: { id: accountId } },
+      order: { createdAt: 'ASC' },
+    });
+
+    let runningBalance = 0;
+
+    const history = transactions.map((t) => {
+      const amount = Number(t.amount);
+
+      runningBalance += t.type === TransactionType.CREDIT ? amount : -amount;
+
+      return {
+        date: t.createdAt,
+        balance: runningBalance,
+        transactionId: t.id,
+        type: t.type,
+        amount,
+      };
+    });
+
+    return history;
+  }
 }

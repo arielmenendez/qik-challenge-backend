@@ -2,10 +2,24 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccountSummary {
+  balance: Float!
+  totalCredits: Float!
+  totalDebits: Float!
+}
+
 type AccountType {
   balance: Float!
   createdAt: DateTime!
   id: ID!
+}
+
+type BalanceHistoryPoint {
+  amount: Float!
+  balance: Float!
+  date: DateTime!
+  transactionId: ID!
+  type: String!
 }
 
 """
@@ -22,7 +36,9 @@ type Mutation {
 type Query {
   account(id: ID!): AccountType!
   accountBalance(id: ID!): Float!
+  accountSummary(accountId: ID!): AccountSummary!
   accountsStatus: String!
+  balanceHistory(accountId: ID!): [BalanceHistoryPoint!]!
   myAccounts: [AccountType!]!
   transactions(accountId: ID!, from: DateTime, limit: Int, offset: Int, to: DateTime, type: TransactionType): TransactionsPage!
 }
