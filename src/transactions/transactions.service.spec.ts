@@ -12,6 +12,7 @@ import { Account } from '../accounts/entities/account.entity';
 import { Transaction, TransactionType } from './entities/transaction.entity';
 import { TransactionsService } from './transactions.service';
 import { Cache } from 'cache-manager';
+import { AppLoggerService } from 'src/common/logger/app-logger.service';
 
 type QB<T extends ObjectLiteral> = Pick<
   SelectQueryBuilder<T>,
@@ -81,6 +82,16 @@ describe('TransactionsService', () => {
             get: jest.fn(),
             set: jest.fn(),
             del: jest.fn(),
+          },
+        },
+        {
+          provide: AppLoggerService,
+          useValue: {
+            log: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
           },
         },
       ],

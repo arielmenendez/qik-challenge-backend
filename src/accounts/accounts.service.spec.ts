@@ -3,6 +3,7 @@ import { AccountsService } from './accounts.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Account } from './entities/account.entity';
+import { AppLoggerService } from 'src/common/logger/app-logger.service';
 
 describe('AccountsService', () => {
   let service: AccountsService;
@@ -20,6 +21,16 @@ describe('AccountsService', () => {
             find: jest.fn(),
             findOneOrFail: jest.fn(),
             count: jest.fn(),
+          },
+        },
+        {
+          provide: AppLoggerService,
+          useValue: {
+            log: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
           },
         },
       ],
@@ -43,6 +54,7 @@ describe('AccountsService', () => {
         user: { id: 'user-123' },
       } as Account;
 
+      accountsRepository.count.mockResolvedValue(0);
       accountsRepository.create.mockReturnValue(createdAccount);
       accountsRepository.save.mockResolvedValue(createdAccount);
 

@@ -3,6 +3,7 @@ import { TransactionsResolver } from './transactions.resolver';
 import { TransactionsService } from './transactions.service';
 import { AccountsService } from '../accounts/accounts.service';
 import { TransactionType } from './entities/transaction.entity';
+import { AppLoggerService } from 'src/common/logger/app-logger.service';
 
 describe('TransactionsResolver', () => {
   let resolver: TransactionsResolver;
@@ -26,6 +27,16 @@ describe('TransactionsResolver', () => {
           provide: AccountsService,
           useValue: {
             findAccountByIdForUser: jest.fn(),
+          },
+        },
+        {
+          provide: AppLoggerService,
+          useValue: {
+            log: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn(),
+            verbose: jest.fn(),
           },
         },
       ],

@@ -18,6 +18,7 @@ import { CurrentUser } from 'src/common/auth/decorators/current-user.decorator';
 import { JwtUser } from 'src/common/auth/types/jwt-user.type';
 import { AccountsService } from '../accounts/accounts.service';
 import { TransactionType } from './entities/transaction.entity';
+import { AppLoggerService } from 'src/common/logger/app-logger.service';
 
 @ObjectType()
 class TransactionTypeGQL {
@@ -85,6 +86,7 @@ export class TransactionsResolver {
   constructor(
     private readonly transactionsService: TransactionsService,
     private readonly accountsService: AccountsService,
+    private readonly logger: AppLoggerService,
   ) {}
 
   @UseGuards(GqlAuthGuard)
@@ -95,6 +97,12 @@ export class TransactionsResolver {
     @Args('description', { nullable: true }) description: string,
     @CurrentUser() user: JwtUser,
   ) {
+    this.logger.log('GraphQL credit mutation called', {
+      accountId,
+      userId: user.userId,
+      amount,
+    });
+
     await this.accountsService.findAccountByIdForUser(accountId, user.userId);
 
     return this.transactionsService.createTransaction(
@@ -113,6 +121,12 @@ export class TransactionsResolver {
     @Args('description', { nullable: true }) description: string,
     @CurrentUser() user: JwtUser,
   ) {
+    this.logger.log('GraphQL debit mutation called', {
+      accountId,
+      userId: user.userId,
+      amount,
+    });
+
     await this.accountsService.findAccountByIdForUser(accountId, user.userId);
 
     return this.transactionsService.createTransaction(
@@ -137,6 +151,16 @@ export class TransactionsResolver {
     @Args('limit', { type: () => Int, nullable: true }) limit?: number,
     @Args('offset', { type: () => Int, nullable: true }) offset?: number,
   ) {
+    this.logger.debug('GraphQL transactions query called', {
+      accountId,
+      userId: user.userId,
+      type,
+      from,
+      to,
+      limit,
+      offset,
+    });
+
     await this.accountsService.findAccountByIdForUser(accountId, user.userId);
 
     return this.transactionsService.findTransactionsForAccount({
@@ -155,6 +179,11 @@ export class TransactionsResolver {
     @Args('accountId', { type: () => ID }) accountId: string,
     @CurrentUser() user: JwtUser,
   ) {
+    this.logger.debug('GraphQL accountSummary query called', {
+      accountId,
+      userId: user.userId,
+    });
+
     await this.accountsService.findAccountByIdForUser(accountId, user.userId);
 
     return this.transactionsService.getAccountSummary(accountId);
@@ -166,6 +195,11 @@ export class TransactionsResolver {
     @Args('accountId', { type: () => ID }) accountId: string,
     @CurrentUser() user: JwtUser,
   ) {
+    this.logger.debug('GraphQL balanceHistory query called', {
+      accountId,
+      userId: user.userId,
+    });
+
     await this.accountsService.findAccountByIdForUser(accountId, user.userId);
 
     return this.transactionsService.getBalanceHistory(accountId);
