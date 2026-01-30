@@ -34,7 +34,7 @@ describe('AccountsService', () => {
 
   describe('createAccount', () => {
     it('should create and save a new account with zero balance', async () => {
-      const user = { userId: 'user-123' };
+      const user = { id: 'user-123' };
 
       const createdAccount = {
         id: 'account-1',
@@ -48,7 +48,7 @@ describe('AccountsService', () => {
       const result = await service.createAccount(user);
 
       expect(accountsRepository.create).toHaveBeenCalledWith({
-        user: { id: user.userId },
+        user: { id: user.id },
         balance: 0,
       });
 

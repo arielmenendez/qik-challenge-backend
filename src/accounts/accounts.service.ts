@@ -13,7 +13,7 @@ export class AccountsService {
 
   async createAccount(user: any): Promise<Account> {
     const account = this.accountsRepository.create({
-      user: { id: user.userId } as User,
+      user: { id: user.id } as User,
       balance: 0,
     });
 
