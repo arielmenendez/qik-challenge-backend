@@ -13,10 +13,13 @@ import { TransactionsModule } from './transactions/transactions.module';
 
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-ioredis-yet';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    LoggerModule,
 
     CacheModule.registerAsync({
       isGlobal: true,
