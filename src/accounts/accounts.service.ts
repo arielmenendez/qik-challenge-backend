@@ -1,8 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Account } from './entities/account.entity';
 import { User } from '../users/entities/user.entity';
+
+const MAX_ACCOUNTS_PER_USER = 5;
 
 @Injectable()
 export class AccountsService {
@@ -16,6 +18,14 @@ export class AccountsService {
   }
 
   async createAccount(user: any): Promise<Account> {
+    const existingAccounts = await this.accountsRepository.count({
+      where: { user: { id: user.id } },
+    });
+
+    if (existingAccounts >= MAX_ACCOUNTS_PER_USER) {
+      throw new BadRequestException('Account limit reached for this user');
+    }
+
     const account = this.accountsRepository.create({
       user: { id: user.id } as User,
       balance: 0,

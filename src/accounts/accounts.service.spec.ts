@@ -19,6 +19,7 @@ describe('AccountsService', () => {
             save: jest.fn(),
             find: jest.fn(),
             findOneOrFail: jest.fn(),
+            count: jest.fn(),
           },
         },
       ],
