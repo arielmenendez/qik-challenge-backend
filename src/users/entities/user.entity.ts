@@ -2,12 +2,14 @@ import {
   Column,
   DeleteDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { UserRole } from '../enums/user-role.enum';
 import { Exclude } from 'class-transformer';
+import { Account } from 'src/accounts/entities/account.entity';
 
-@Entity()
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -21,6 +23,9 @@ export class User {
   @Exclude()
   @Column({ nullable: false })
   password: string;
+
+  @OneToMany(() => Account, (account) => account.user)
+  accounts: Account[];
 
   @Column({
     type: 'enum',
