@@ -20,6 +20,9 @@ export class Account {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  @Column({ type: 'varchar', length: 10, unique: true })
+  accountNumber: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

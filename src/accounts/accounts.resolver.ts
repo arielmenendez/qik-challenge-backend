@@ -23,6 +23,9 @@ class AccountType {
   balance: number;
 
   @Field()
+  accountNumber: string;
+
+  @Field()
   createdAt: Date;
 }
 

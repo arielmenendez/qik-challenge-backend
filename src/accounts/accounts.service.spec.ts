@@ -50,6 +50,7 @@ describe('AccountsService', () => {
       expect(accountsRepository.create).toHaveBeenCalledWith({
         user: { id: user.id },
         balance: 0,
+        accountNumber: expect.any(String),
       });
 
       expect(accountsRepository.save).toHaveBeenCalledWith(createdAccount);

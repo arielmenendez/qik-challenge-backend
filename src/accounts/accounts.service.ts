@@ -11,10 +11,15 @@ export class AccountsService {
     private readonly accountsRepository: Repository<Account>,
   ) {}
 
+  private generateAccountNumber(): string {
+    return Math.floor(1000000000 + Math.random() * 9000000000).toString();
+  }
+
   async createAccount(user: any): Promise<Account> {
     const account = this.accountsRepository.create({
       user: { id: user.id } as User,
       balance: 0,
+      accountNumber: this.generateAccountNumber(),
     });
 
     return this.accountsRepository.save(account);
