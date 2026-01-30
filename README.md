@@ -132,6 +132,19 @@ Respuesta:
 
 ---
 
+## Perfil del usuario autenticado
+
+**GET**  
+`/auth/profile`
+
+Respuesta:
+
+```json
+{
+  "name": "Ariel"
+}
+```
+
 ## Autorización
 
 Todos los endpoints protegidos requieren:

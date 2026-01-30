@@ -73,9 +73,17 @@ describe('AuthController', () => {
   });
 
   describe('profile', () => {
-    it('should return profile string', () => {
-      const result = controller.profile();
-      expect(result).toBe('profile');
+    it('should return the user name', () => {
+      const mockUser = {
+        id: '1',
+        name: 'John',
+        email: 'john@mail.com',
+        role: 'USER',
+      };
+
+      const result = controller.profile(mockUser as any);
+
+      expect(result).toEqual({ name: 'John' });
     });
   });
 });
