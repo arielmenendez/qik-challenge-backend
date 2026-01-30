@@ -1,98 +1,537 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend — Accounts & Ledger Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend construido con:
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- **NestJS**
+- **TypeORM**
+- **PostgreSQL**
+- **Redis**
+- **GraphQL (Apollo)**
+- **REST (Auth)**
+- **JWT Authentication**
+- **Docker Compose**
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+# Requisitos
 
-## Project setup
+Solo necesitas:
 
-```bash
-$ npm install
+- **Docker Desktop** (o Docker Engine + Compose)
+
+No necesitas instalar Node ni Postgres localmente si usas Docker.
+
+---
+
+# Variables de Entorno
+
+Crea un archivo `.env` en la raíz del proyecto.
+
+### Configuración para Docker
+
+```env
+DATABASE_USER=postgres
+DATABASE_PASSWORD=postgres
+DATABASE_HOST=db
+DATABASE_NAME=qik_database
+DATABASE_PORT=5432
+
+PORT=3000
+
+BCRYPT_SALT_ROUNDS=12
+JWT_SECRET=super_ultra_secret_key
+JWT_EXPIRES_IN=15m
+
+REDIS_HOST=redis
+REDIS_PORT=6379
 ```
 
-## Compile and run the project
+---
+
+# Levantar el proyecto con Docker
+
+Desde la raíz del proyecto:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker compose up --build
 ```
 
-## Run tests
+Esto levanta:
+
+| Servicio | URL |
+|---------|-----|
+| Backend API | http://localhost:3000 |
+| GraphQL | http://localhost:3000/graphql |
+| Swagger REST | http://localhost:3000/docs |
+| PostgreSQL | localhost:5432 |
+| Redis | localhost:6379 |
+
+---
+
+# Autenticación (REST)
+
+Base URL REST:
+
+```
+http://localhost:3000/api/v1
+```
+
+---
+
+## Registro de usuario
+
+**POST**  
+`/auth/register`
+
+```json
+{
+  "name": "Ariel",
+  "email": "arielmenendez19@gmail.com",
+  "password": "123456"
+}
+```
+
+Respuesta:
+
+```json
+{
+  "id": "2b51ac57-9050-463d-a5fa-09b36b78595f",
+  "name": "Ariel",
+  "email": "arielmenendez19@gmail.com",
+  "role": "client"
+}
+```
+
+---
+
+## Login
+
+**POST**  
+`/auth/login`
+
+```json
+{
+  "email": "arielmenendez19@gmail.com",
+  "password": "123456"
+}
+```
+
+Respuesta:
+
+```json
+{
+  "access_token": "JWT_TOKEN_AQUI",
+  "user": {
+    "id": "2b51ac57-9050-463d-a5fa-09b36b78595f",
+    "name": "Ariel",
+    "email": "arielmenendez19@gmail.com",
+    "role": "client"
+  }
+}
+```
+
+---
+
+## Autorización
+
+Todos los endpoints protegidos requieren:
+
+```
+Authorization: Bearer TU_TOKEN_AQUI
+```
+
+---
+
+# GraphQL API
+
+URL:
+
+```
+http://localhost:3000/graphql
+```
+
+En GraphQL Playground, agregar en **HTTP HEADERS**:
+
+```json
+{
+  "Authorization": "Bearer TU_TOKEN_AQUI"
+}
+```
+
+---
+
+# Cuentas
+
+### Crear cuenta
+
+```graphql
+mutation {
+  createAccount {
+    id
+    balance
+    createdAt
+  }
+}
+```
+
+---
+
+### Mis cuentas
+
+```graphql
+query {
+  myAccounts {
+    id
+    balance
+    createdAt
+  }
+}
+```
+
+---
+
+### Obtener cuenta por ID
+
+```graphql
+query GetAccount($accountId: ID!) {
+  account(id: $accountId) {
+    id
+    balance
+    createdAt
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+### Balance de una cuenta
+
+```graphql
+query GetBalance($accountId: ID!) {
+  accountBalance(id: $accountId)
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+# Transacciones
+
+### Crédito
+
+```graphql
+mutation Credit($accountId: ID!, $amount: Float!, $description: String) {
+  credit(accountId: $accountId, amount: $amount, description: $description) {
+    id
+    type
+    amount
+    createdAt
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc",
+  "amount": 100,
+  "description": "lo que te debo"
+}
+```
+
+---
+
+### Débito
+
+```graphql
+mutation Debit($accountId: ID!, $amount: Float!) {
+  debit(accountId: $accountId, amount: $amount) {
+    id
+    type
+    amount
+    createdAt
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc",
+  "amount": 40
+}
+```
+
+---
+
+### Listar transacciones
+
+```graphql
+query GetTransactions($accountId: ID!) {
+  transactions(accountId: $accountId) {
+    total
+    data {
+      id
+      type
+      amount
+      description
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+### Filtros disponibles
+
+- Por tipo (CREDIT / DEBIT)
+- Por rango de fechas
+- Paginación (limit / offset)
+
+## Ejemplos de uso de filtros
+
+### Filtrar solo créditos
+
+```graphql
+query GetCredits($accountId: ID!) {
+  transactions(accountId: $accountId, type: CREDIT) {
+    total
+    data {
+      id
+      type
+      amount
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+### Filtrar solo débitos
+
+```graphql
+query GetDebits($accountId: ID!) {
+  transactions(accountId: $accountId, type: DEBIT) {
+    total
+    data {
+      id
+      type
+      amount
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+### Filtrar por rango de fechas
+
+```graphql
+query GetByDate($accountId: ID!, $from: DateTime!, $to: DateTime!) {
+  transactions(accountId: $accountId, from: $from, to: $to) {
+    total
+    data {
+      id
+      type
+      amount
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc",
+  "from": "2026-01-01T00:00:00.000Z",
+  "to": "2026-12-31T23:59:59.999Z"
+}
+```
+
+---
+
+### Paginación de resultados
+
+```graphql
+query GetPaged($accountId: ID!, $limit: Int!, $offset: Int!) {
+  transactions(accountId: $accountId, limit: $limit, offset: $offset) {
+    total
+    data {
+      id
+      type
+      amount
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc",
+  "limit": 2,
+  "offset": 0
+}
+```
+
+---
+
+### Filtros combinados (tipo + fecha + paginación)
+
+```graphql
+query GetFiltered(
+  $accountId: ID!,
+  $from: DateTime!,
+  $to: DateTime!,
+  $limit: Int!,
+  $offset: Int!
+) {
+  transactions(
+    accountId: $accountId
+    type: CREDIT
+    from: $from
+    to: $to
+    limit: $limit
+    offset: $offset
+  ) {
+    total
+    data {
+      id
+      type
+      amount
+      description
+      createdAt
+    }
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc",
+  "from": "2026-01-01T00:00:00.000Z",
+  "to": "2026-12-31T23:59:59.999Z",
+  "limit": 2,
+  "offset": 0
+}
+```
+---
+
+# Resumen de cuenta (con Redis Cache)
+
+```graphql
+query GetSummary($accountId: ID!) {
+  accountSummary(accountId: $accountId) {
+    balance
+    totalCredits
+    totalDebits
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+Este endpoint usa Redis para cachear resultados.  
+El cache se invalida automáticamente al crear una transacción.
+
+---
+
+# Historial de balance
+
+```graphql
+query GetBalanceHistory($accountId: ID!) {
+  balanceHistory(accountId: $accountId) {
+    date
+    balance
+    type
+    amount
+    transactionId
+  }
+}
+```
+
+Variables:
+
+```json
+{
+  "accountId": "319060fa-b058-46a2-9a05-8d83dd9561dc"
+}
+```
+
+---
+
+# Tests
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run test
 ```
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+# Notas
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- Swagger: `http://localhost:3000/docs`
+- GraphQL: `http://localhost:3000/graphql`
+- Redis se usa para mejorar performance
+- PostgreSQL guarda datos persistentes
+- JWT protege todos los endpoints sensibles
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+---
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+**Proyecto desarrollado como parte de la Prueba Técnica Full‑Stack para Qik Banco Digital por Ariel Menéndez Méndez.**
