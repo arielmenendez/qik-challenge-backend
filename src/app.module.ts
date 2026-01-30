@@ -11,9 +11,22 @@ import { join } from 'path';
 import { AccountsModule } from './accounts/accounts.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-ioredis-yet';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: () => ({
+        store: redisStore,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: Number(process.env.REDIS_PORT) || 6379,
+        ttl: 60,
+      }),
+    }),
 
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

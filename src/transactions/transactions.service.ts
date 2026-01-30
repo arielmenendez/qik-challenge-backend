@@ -1,8 +1,10 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { Transaction, TransactionType } from './entities/transaction.entity';
 import { Account } from '../accounts/entities/account.entity';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class TransactionsService {
@@ -15,6 +17,9 @@ export class TransactionsService {
 
     @InjectDataSource()
     private readonly dataSource: DataSource,
+
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
   ) {}
 
   async createTransaction(
@@ -66,6 +71,8 @@ export class TransactionsService {
 
       await queryRunner.commitTransaction();
 
+      await this.cacheManager.del(`summary:${accountId}`);
+
       return transaction;
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -110,6 +117,19 @@ export class TransactionsService {
   }
 
   async getAccountSummary(accountId: string) {
+    const cacheKey = `summary:${accountId}`;
+
+    // 1️⃣ Intentar leer del cache
+    const cached = await this.cacheManager.get<{
+      balance: number;
+      totalCredits: number;
+      totalDebits: number;
+    }>(cacheKey);
+
+    if (cached) {
+      return cached;
+    }
+
     const creditsResult = await this.transactionsRepository
       .createQueryBuilder('t')
       .select('COALESCE(SUM(t.amount), 0)', 'total')
@@ -128,11 +148,15 @@ export class TransactionsService {
       id: accountId,
     });
 
-    return {
+    const summary = {
       balance: Number(account.balance),
       totalCredits: Number(creditsResult.total),
       totalDebits: Number(debitsResult.total),
     };
+
+    await this.cacheManager.set(cacheKey, summary, 30);
+
+    return summary;
   }
 
   async getBalanceHistory(accountId: string) {
